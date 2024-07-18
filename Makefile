@@ -54,3 +54,10 @@ prerelease:
 	git add pyproject.toml
 	git commit -m "Release version $$(poetry version --short)"
 	git tag $$(poetry version --short)
+
+.PHONY: preminor
+preminor:
+	poetry version preminor
+	git add pyproject.toml
+	git commit -m "Release version $$(poetry version --short)"
+	git tag $$(poetry version --short)
