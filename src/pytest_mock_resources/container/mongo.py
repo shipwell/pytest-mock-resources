@@ -47,10 +47,10 @@ class MongoConfig(DockerContainerConfig):
 
     def check_fn(self):
         try:
-            with pymongo.MongoClient(self.host, self.port, directConnection=True) as client:
+            with pymongo.MongoClient(self.host, self.port, directConnection=True, timeoutMS=2000) as client:
                 db = client[self.root_database]
                 db.command("ismaster")
-        except pymongo.errors.ConnectionFailure:
+        except pymongo.errors.ConnectionFailure as cf:
             raise ContainerCheckFailed(
                 f"Unable to connect to a presumed MongoDB test container via given config: {self}"
             )

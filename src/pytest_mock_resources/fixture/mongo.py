@@ -6,6 +6,7 @@ from pytest_mock_resources.compat import pymongo
 from pytest_mock_resources.container.base import get_container
 from pytest_mock_resources.container.mongo import MongoConfig
 from pytest_mock_resources.credentials import Credentials
+from pymongo.errors import OperationFailure
 
 
 @pytest.fixture(scope="session")
@@ -48,16 +49,27 @@ def _create_clean_database(config: MongoConfig):
             container_args: List[str] = config.container_args
             repl_config = {
                 "_id": container_args[container_args.index("--replSet") + 1],
-                # without telling mongo the host, it attempts to use the container id
                 "members": [{"_id": 0, "host": f"{config.host}:{config.port}"}],
             }
-            repl_client.admin.command(
-                "replSetInitiate",
-                repl_config,
-                read_preference=pymongo.ReadPreference.PRIMARY_PREFERRED,
-            )
 
-    root_client = pymongo.MongoClient(config.host, config.port)
+            replset_initialized = False
+            try:
+                repl_status = repl_client.admin.command('replSetGetStatus')
+                replset_initialized = bool(repl_status.get('ok', 0))
+            except OperationFailure as of:
+                if of.code == 94: # no replset config has been recevied
+                    replset_initialized = False
+                else:
+                    raise of
+
+            if not replset_initialized:
+                repl_client.admin.command(
+                    "replSetInitiate",
+                    repl_config,
+                    read_preference=pymongo.ReadPreference.PRIMARY_PREFERRED,
+                )
+
+    root_client = pymongo.MongoClient(config.host, config.port, timeoutMS=3000)
     root_db = root_client[config.root_database]
 
     # Create a collection called `pytestMockResourceDbs' in the admin tab if not already created.
