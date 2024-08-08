@@ -150,6 +150,7 @@ def wait_for_container(
         "publish": [(dest, source) for source, dest in config.ports().items()],
         "envs": config.environment(),
         "name": container_name(config.name, config.port),
+        "command": config.container_args
     }
 
     try:
@@ -164,7 +165,7 @@ def wait_for_container(
         # In the event it doesn't exist, we attempt to start the container
         try:
             container = docker.run(
-                *run_args, **run_kwargs, command=config.container_args, detach=True, remove=True
+                *run_args, **run_kwargs, detach=True, remove=True
             )
         except DockerException as e:
             container = None

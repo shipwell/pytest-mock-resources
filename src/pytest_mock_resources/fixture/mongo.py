@@ -42,14 +42,14 @@ def create_mongo_fixture(scope="function"):
     return _
 
 
-def _create_clean_database(config):
+def _create_clean_database(config: MongoConfig):
     if _replication_enabled(config):
-        with pymongo.MongoClient(config.host, 27017, directConnection=True) as repl_client:
+        with pymongo.MongoClient(config.host, config.port, directConnection=True) as repl_client:
             container_args: List[str] = config.container_args
             repl_config = {
                 "_id": container_args[container_args.index("--replSet") + 1],
                 # without telling mongo the host, it attempts to use the container id
-                "members": [{"_id": 0, "host": f"{config.host}:27017"}],
+                "members": [{"_id": 0, "host": f"{config.host}:{config.port}"}],
             }
             repl_client.admin.command(
                 "replSetInitiate",

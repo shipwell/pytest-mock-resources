@@ -1,4 +1,4 @@
-from typing import ClassVar, Iterable
+from typing import ClassVar, Iterable, List
 
 from pytest_mock_resources.compat import pymongo
 from pytest_mock_resources.config import DockerContainerConfig, fallback
@@ -47,9 +47,9 @@ class MongoConfig(DockerContainerConfig):
 
     def check_fn(self):
         try:
-            client = pymongo.MongoClient(self.host, self.port, directConnection=True)
-            db = client[self.root_database]
-            db.command("ismaster")
+            with pymongo.MongoClient(self.host, self.port, directConnection=True) as client:
+                db = client[self.root_database]
+                db.command("ismaster")
         except pymongo.errors.ConnectionFailure:
             raise ContainerCheckFailed(
                 f"Unable to connect to a presumed MongoDB test container via given config: {self}"
