@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from python_on_whales.docker_client import DockerClient
 
 
-DEFAULT_RETRIES = 40
+DEFAULT_RETRIES = 5
 DEFAULT_INTERVAL = 0.5
 
 
